@@ -109,11 +109,15 @@ export default function App() {
   });
 
   useEffect(() => {
+    if (!auth) {
+      setAuthReady(true);
+      return;
+    }
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
       setAuthReady(true);
       
-      if (currentUser) {
+      if (currentUser && db) {
         // Sync user to Firestore
         const userRef = doc(db, "users", currentUser.uid);
         await setDoc(userRef, {
@@ -639,6 +643,20 @@ export default function App() {
   return (
     <div className="min-h-screen flex flex-col items-center py-12 px-4 sm:px-6 bg-slate-50">
       <div className="max-w-2xl w-full space-y-8">
+        {!db && (
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-4 bg-amber-50 border border-amber-200 rounded-2xl text-amber-800 text-sm flex gap-3 items-start shadow-sm"
+          >
+            <Key className="shrink-0 mt-0.5" size={18} />
+            <div>
+              <p className="font-bold">Acción Requerida: Configuración de Firebase</p>
+              <p>Por favor, añade los secretos <span className="font-mono">VITE_FIREBASE_...</span> en el panel de Secrets de AI Studio para activar el historial y el login.</p>
+            </div>
+          </motion.div>
+        )}
+
         {/* User Profile & Actions */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">

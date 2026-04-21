@@ -14,10 +14,32 @@ const firebaseConfig = {
   firestoreDatabaseId: import.meta.env.VITE_FIREBASE_DATABASE_ID || firebaseConfigLegacy.firestoreDatabaseId,
 };
 
+// Security check: Ensure we are not using placeholders
+const isConfigValid = firebaseConfig.apiKey && !firebaseConfig.apiKey.includes('PLACEHOLDER');
+
+if (!isConfigValid) {
+  console.error("CRITICAL: Firebase API Key is missing or invalid. Please ensure you have added the VITE_FIREBASE_... variables to the Secrets panel in AI Studio.");
+}
+
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+let app;
+let authInstance: any;
+let dbInstance: any;
+
+try {
+  if (isConfigValid) {
+    app = initializeApp(firebaseConfig);
+    authInstance = getAuth(app);
+    dbInstance = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+  } else {
+    console.error("CRITICAL: Firebase configuration is invalid. Using placeholders.");
+  }
+} catch (error) {
+  console.error("Firebase initialization failed:", error);
+}
+
+export const auth = authInstance;
+export const db = dbInstance;
 export const googleProvider = new GoogleAuthProvider();
 
 // Auth Helpers

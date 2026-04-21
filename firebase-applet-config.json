@@ -1,10 +1,10 @@
 {
-  "projectId": "practical-lodge-144902",
-  "appId": "1:949922442554:web:8d13f1e743a47126cef403",
-  "apiKey": "AIzaSyCJqA1PGvHFSQyKhidcnUBAc5ULNHhnxb4",
-  "authDomain": "practical-lodge-144902.firebaseapp.com",
-  "firestoreDatabaseId": "ai-studio-7a6a0c7e-a76c-4ccd-a9bc-a0f0c9f52f35",
-  "storageBucket": "practical-lodge-144902.firebasestorage.app",
-  "messagingSenderId": "949922442554",
+  "projectId": "PLACEHOLDER_PROJECT_ID",
+  "appId": "PLACEHOLDER_APP_ID",
+  "apiKey": "PLACEHOLDER_API_KEY",
+  "authDomain": "PLACEHOLDER_AUTH_DOMAIN",
+  "firestoreDatabaseId": "PLACEHOLDER_DATABASE_ID",
+  "storageBucket": "PLACEHOLDER_STORAGE_BUCKET",
+  "messagingSenderId": "PLACEHOLDER_MESSAGING_SENDER_ID",
   "measurementId": ""
 }

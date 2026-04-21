@@ -1,0 +1,73 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: /users/{uid}
+    // Fields:
+    //   - uid: string (required)
+    //   - displayName: string
+    //   - email: string (required)
+    //   - photoURL: string
+    //   - createdAt: timestamp
+    //
+    // Collection: /users/{uid}/prompts/{promptId}
+    // Fields:
+    //   - uid: string (required)
+    //   - tool: string
+    //   - topic: string
+    //   - prompt: string (required)
+    //   - createdAt: timestamp (required)
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'email']) &&
+             data.uid is string &&
+             data.email is string &&
+             data.email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    function isValidPrompt(data) {
+      return data.keys().hasAll(['uid', 'prompt', 'createdAt']) &&
+             data.uid == request.auth.uid &&
+             data.prompt is string &&
+             data.prompt.size() < 10000;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUser(request.resource.data);
+      allow update: if isOwner(userId) && isValidUser(request.resource.data);
+
+      match /prompts/{promptId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidPrompt(request.resource.data);
+        allow delete: if isOwner(userId);
+      }
+    }
+
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

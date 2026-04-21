@@ -1,6 +1,3 @@
-import { db, OperationType, handleFirestoreError } from "../firebase";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
-
 export interface PromptFormData {
   businessDescription: string;
   targetAudience: string;
@@ -45,7 +42,7 @@ Indica cómo debe entregarse la información de salida (ej. "Entregar en una tab
 Formato de Salida:
 Tu única respuesta debe ser el prompt final generado, escrito en primera persona (como si el usuario le estuviera dando la orden directa a la IA). No incluyas saludos, ni confirmaciones, ni texto previo o posterior. Solo entrega el prompt listo para usar.`;
 
-export async function generateOptimizedPrompt(data: PromptFormData, userId: string): Promise<string> {
+export async function generateOptimizedPrompt(data: PromptFormData): Promise<string> {
   const objectiveSpecificInfo = 
     data.objective === "Vender un producto" ? `Valor único/Oferta: ${data.uniqueValue}` :
     data.objective === "Educar a la audiencia" ? `Concepto clave o tip: ${data.keyConcept}` :
@@ -87,20 +84,6 @@ Formato deseado: ${data.outputFormat}
 
     if (!generatedText) {
       throw new Error("La IA devolvió una respuesta vacía.");
-    }
-
-    // Save to Firestore
-    const path = `users/${userId}/prompts`;
-    try {
-      await addDoc(collection(db, path), {
-        uid: userId,
-        tool: data.marketingTool,
-        topic: data.specificTopic,
-        prompt: generatedText,
-        createdAt: serverTimestamp(),
-      });
-    } catch (fsError) {
-      handleFirestoreError(fsError, OperationType.CREATE, path);
     }
 
     return generatedText;

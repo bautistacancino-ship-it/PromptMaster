@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { 
   Sparkles, 
   Target, 
@@ -19,17 +19,10 @@ import {
   Instagram,
   Palette,
   ImagePlus,
-  Info,
-  LogIn,
-  LogOut,
-  Key,
-  History
+  Info
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { generateOptimizedPrompt, PromptFormData } from "./services/geminiService";
-import { auth, signInWithGoogle, logout, db } from "./firebase";
-import { onAuthStateChanged, User } from "firebase/auth";
-import { collection, query, orderBy, onSnapshot, doc, setDoc, serverTimestamp } from "firebase/firestore";
 
 // Add global type for AI Studio API
 declare global {
@@ -83,14 +76,10 @@ const InfoTooltip = ({ text }: { text: string }) => (
 );
 
 export default function App() {
-  const [user, setUser] = useState<User | null>(null);
-  const [authReady, setAuthReady] = useState(false);
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  const [history, setHistory] = useState<any[]>([]);
-  const [showHistory, setShowHistory] = useState(false);
   
   const [formData, setFormData] = useState<PromptFormData>({
     businessDescription: "",
@@ -107,37 +96,6 @@ export default function App() {
     newsDetail: "",
     productImage: "",
   });
-
-  useEffect(() => {
-    if (!auth) {
-      setAuthReady(true);
-      return;
-    }
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      setUser(currentUser);
-      setAuthReady(true);
-      
-      if (currentUser && db) {
-        // Sync user to Firestore
-        const userRef = doc(db, "users", currentUser.uid);
-        await setDoc(userRef, {
-          uid: currentUser.uid,
-          displayName: currentUser.displayName,
-          email: currentUser.email,
-          photoURL: currentUser.photoURL,
-          updatedAt: serverTimestamp()
-        }, { merge: true });
-
-        // Subscribe to history
-        const q = query(collection(db, `users/${currentUser.uid}/prompts`), orderBy("createdAt", "desc"));
-        const unsubHistory = onSnapshot(q, (snapshot) => {
-          setHistory(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-        });
-        return () => unsubHistory();
-      }
-    });
-    return () => unsubscribe();
-  }, []);
 
   const handleInputChange = (field: keyof PromptFormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -157,10 +115,9 @@ export default function App() {
   };
 
   const handleGenerate = async () => {
-    if (!user) return;
     setLoading(true);
     try {
-      const prompt = await generateOptimizedPrompt(formData, user.uid);
+      const prompt = await generateOptimizedPrompt(formData);
       setResult(prompt);
       setStep(5);
     } catch (error: any) {
@@ -178,39 +135,6 @@ export default function App() {
 
   const nextStep = () => setStep(s => Math.min(s + 1, 4));
   const prevStep = () => setStep(s => Math.max(s - 1, 1));
-
-  if (!authReady) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="animate-spin text-brand-600" size={48} />
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-slate-50">
-        <motion.div 
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="glass-card p-10 rounded-3xl max-w-md w-full text-center space-y-6"
-        >
-          <div className="p-4 bg-brand-100 text-brand-600 rounded-2xl inline-block">
-            <Sparkles size={48} />
-          </div>
-          <h1 className="text-3xl font-display font-bold text-slate-900">Bienvenido a Prompt Master</h1>
-          <p className="text-slate-500">Inicia sesión con Google para comenzar a crear prompts profesionales con tu propia cuenta.</p>
-          <button 
-            onClick={signInWithGoogle}
-            className="btn-primary w-full py-4 text-lg"
-          >
-            <LogIn size={20} />
-            Iniciar Sesión con Google
-          </button>
-        </motion.div>
-      </div>
-    );
-  }
 
   const renderStep = () => {
     switch (step) {
@@ -643,47 +567,6 @@ export default function App() {
   return (
     <div className="min-h-screen flex flex-col items-center py-12 px-4 sm:px-6 bg-slate-50">
       <div className="max-w-2xl w-full space-y-8">
-        {!db && (
-          <motion.div 
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="p-4 bg-amber-50 border border-amber-200 rounded-2xl text-amber-800 text-sm flex gap-3 items-start shadow-sm"
-          >
-            <Key className="shrink-0 mt-0.5" size={18} />
-            <div>
-              <p className="font-bold">Acción Requerida: Configuración de Firebase</p>
-              <p>Por favor, añade los secretos <span className="font-mono">VITE_FIREBASE_...</span> en el panel de Secrets de AI Studio para activar el historial y el login.</p>
-            </div>
-          </motion.div>
-        )}
-
-        {/* User Profile & Actions */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <img src={user.photoURL || ""} alt={user.displayName || ""} className="w-10 h-10 rounded-full border-2 border-white shadow-sm" />
-            <div className="hidden sm:block">
-              <div className="text-sm font-bold text-slate-900">{user.displayName}</div>
-              <div className="text-xs text-slate-500">{user.email}</div>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <button 
-              onClick={() => setShowHistory(!showHistory)}
-              className="p-2 text-slate-500 hover:text-brand-600 hover:bg-white rounded-lg transition-all"
-              title="Historial"
-            >
-              <History size={20} />
-            </button>
-            <button 
-              onClick={logout}
-              className="p-2 text-slate-500 hover:text-red-600 hover:bg-white rounded-lg transition-all"
-              title="Cerrar Sesión"
-            >
-              <LogOut size={20} />
-            </button>
-          </div>
-        </div>
-
         {/* Header */}
         <header className="text-center space-y-4">
           <motion.div 
@@ -703,48 +586,6 @@ export default function App() {
             Prompt <span className="text-brand-600">Master</span>
           </motion.h1>
         </header>
-
-        {/* History View */}
-        <AnimatePresence>
-          {showHistory && (
-            <motion.div 
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="overflow-hidden"
-            >
-              <div className="glass-card rounded-3xl p-6 mb-8 space-y-4">
-                <h3 className="font-display font-bold text-lg flex items-center gap-2">
-                  <History size={18} />
-                  Tu Historial de Prompts
-                </h3>
-                <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-                  {history.length === 0 ? (
-                    <p className="text-slate-400 text-center py-8">Aún no has generado ningún prompt.</p>
-                  ) : (
-                    history.map((item) => (
-                      <div key={item.id} className="p-4 bg-white border border-slate-100 rounded-xl space-y-2">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <div className="text-xs font-bold text-brand-600 uppercase">{item.tool}</div>
-                            <div className="text-sm font-semibold text-slate-900">{item.topic}</div>
-                          </div>
-                          <button 
-                            onClick={() => copyToClipboard(item.prompt)}
-                            className="p-2 text-slate-400 hover:text-brand-600 transition-all"
-                          >
-                            <Copy size={16} />
-                          </button>
-                        </div>
-                        <p className="text-xs text-slate-500 line-clamp-2">{item.prompt}</p>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
 
         {/* Form Container */}
         <main className="glass-card rounded-3xl p-6 sm:p-10 relative overflow-hidden">

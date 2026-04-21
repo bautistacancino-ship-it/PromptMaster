@@ -1,6 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, User } from 'firebase/auth';
-import { getFirestore, doc, setDoc, getDoc, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from 'firebase/firestore';
+import { getFirestore } from 'firebase/firestore';
 import firebaseConfigLegacy from '../firebase-applet-config.json';
 
 // Use environment variables if present, otherwise fallback to legacy config (temporarily)
@@ -17,69 +16,17 @@ const firebaseConfig = {
 // Security check: Ensure we are not using placeholders
 const isConfigValid = firebaseConfig.apiKey && !firebaseConfig.apiKey.includes('PLACEHOLDER');
 
-if (!isConfigValid) {
-  console.error("CRITICAL: Firebase API Key is missing or invalid. Please ensure you have added the VITE_FIREBASE_... variables to the Secrets panel in AI Studio.");
-}
-
 // Initialize Firebase
 let app;
-let authInstance: any;
 let dbInstance: any;
 
 try {
   if (isConfigValid) {
     app = initializeApp(firebaseConfig);
-    authInstance = getAuth(app);
     dbInstance = getFirestore(app, firebaseConfig.firestoreDatabaseId);
-  } else {
-    console.error("CRITICAL: Firebase configuration is invalid. Using placeholders.");
   }
 } catch (error) {
   console.error("Firebase initialization failed:", error);
 }
 
-export const auth = authInstance;
 export const db = dbInstance;
-export const googleProvider = new GoogleAuthProvider();
-
-// Auth Helpers
-export const signInWithGoogle = () => signInWithPopup(auth, googleProvider);
-export const logout = () => signOut(auth);
-
-// Firestore Error Handling
-export enum OperationType {
-  CREATE = 'create',
-  UPDATE = 'update',
-  DELETE = 'delete',
-  LIST = 'list',
-  GET = 'get',
-  WRITE = 'write',
-}
-
-interface FirestoreErrorInfo {
-  error: string;
-  operationType: OperationType;
-  path: string | null;
-  authInfo: {
-    userId: string | undefined;
-    email: string | null | undefined;
-    emailVerified: boolean | undefined;
-    isAnonymous: boolean | undefined;
-  }
-}
-
-export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
-  const errInfo: FirestoreErrorInfo = {
-    error: error instanceof Error ? error.message : String(error),
-    authInfo: {
-      userId: auth.currentUser?.uid,
-      email: auth.currentUser?.email,
-      emailVerified: auth.currentUser?.emailVerified,
-      isAnonymous: auth.currentUser?.isAnonymous,
-    },
-    operationType,
-    path
-  };
-  console.error('Firestore Error: ', JSON.stringify(errInfo));
-  throw new Error(JSON.stringify(errInfo));
-}

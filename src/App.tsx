@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, FormEvent } from "react";
 import { 
   Sparkles, 
   Target, 
@@ -19,7 +19,10 @@ import {
   Instagram,
   Palette,
   ImagePlus,
-  Info
+  Info,
+  MessageSquarePlus,
+  Send,
+  X
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { generateOptimizedPrompt, PromptFormData } from "./services/geminiService";
@@ -97,6 +100,11 @@ export default function App() {
     productImage: "",
   });
 
+  const [suggestionModal, setSuggestionModal] = useState(false);
+  const [suggestionText, setSuggestionText] = useState("");
+  const [suggestionEmail, setSuggestionEmail] = useState("");
+  const [sendingSuggestion, setSendingSuggestion] = useState(false);
+
   const handleInputChange = (field: keyof PromptFormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
@@ -135,6 +143,33 @@ export default function App() {
 
   const nextStep = () => setStep(s => Math.min(s + 1, 4));
   const prevStep = () => setStep(s => Math.max(s - 1, 1));
+
+  const handleSendSuggestion = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!suggestionText) return;
+    
+    setSendingSuggestion(true);
+    try {
+      const response = await fetch("/api/send-suggestion", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ suggestion: suggestionText, email: suggestionEmail }),
+      });
+      
+      if (response.ok) {
+        alert("¡Muchas gracias por tu sugerencia! La hemos recibido correctamente.");
+        setSuggestionText("");
+        setSuggestionEmail("");
+        setSuggestionModal(false);
+      } else {
+        throw new Error("Error al enviar");
+      }
+    } catch (error) {
+      alert("Hubo un problema al enviar tu sugerencia. Por favor intenta más tarde.");
+    } finally {
+      setSendingSuggestion(false);
+    }
+  };
 
   const renderStep = () => {
     switch (step) {
@@ -641,20 +676,102 @@ export default function App() {
         </main>
 
         {/* Footer */}
-        <footer className="text-center text-slate-400 text-sm space-y-1">
-          <p>© 2026 Prompt Master • Optimizado para emprendedores</p>
-          <p>
-            Creado por{" "}
-            <a 
-              href="https://www.instagram.com/bautistacancino/" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-brand-500 hover:underline font-medium"
-            >
-              @bautistacancino
-            </a>
-          </p>
+        <footer className="text-center text-slate-400 text-sm space-y-4">
+          <button 
+            onClick={() => setSuggestionModal(true)}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-full hover:text-brand-600 hover:border-brand-500 transition-all shadow-sm"
+          >
+            <MessageSquarePlus size={16} />
+            ¿Tienes alguna sugerencia?
+          </button>
+
+          <div className="space-y-1">
+            <p>© 2026 Prompt Master • Optimizado para emprendedores</p>
+            <p>
+              Creado por{" "}
+              <a 
+                href="https://www.instagram.com/bautistacancino/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-brand-500 hover:underline font-medium"
+              >
+                @bautistacancino
+              </a>
+            </p>
+          </div>
         </footer>
+
+        {/* Suggestion Modal */}
+        <AnimatePresence>
+          {suggestionModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setSuggestionModal(false)}
+                className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+              />
+              <motion.div 
+                initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                className="relative bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl space-y-6"
+              >
+                <div className="flex justify-between items-center">
+                  <h3 className="text-2xl font-display font-bold text-slate-900 flex items-center gap-2">
+                    <MessageSquarePlus className="text-brand-600" />
+                    Enviar Sugerencia
+                  </h3>
+                  <button onClick={() => setSuggestionModal(false)} className="p-2 text-slate-400 hover:text-slate-600">
+                    <X size={24} />
+                  </button>
+                </div>
+
+                <p className="text-slate-500 text-sm">
+                  Tu feedback nos ayuda a mejorar Prompt Master. Cuéntanos qué te gustaría ver o qué podemos mejorar.
+                </p>
+
+                <form onSubmit={handleSendSuggestion} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Tu sugerencia</label>
+                    <textarea 
+                      required
+                      className="input-field min-h-[120px]"
+                      placeholder="Escribe aquí tu mensaje..."
+                      value={suggestionText}
+                      onChange={(e) => setSuggestionText(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Tu email (opcional)</label>
+                    <input 
+                      type="email"
+                      className="input-field"
+                      placeholder="email@ejemplo.com"
+                      value={suggestionEmail}
+                      onChange={(e) => setSuggestionEmail(e.target.value)}
+                    />
+                  </div>
+                  <button 
+                    disabled={sendingSuggestion}
+                    type="submit" 
+                    className="btn-primary w-full py-4 text-lg"
+                  >
+                    {sendingSuggestion ? (
+                      <Loader2 className="animate-spin" />
+                    ) : (
+                      <>
+                        <Send size={18} />
+                        Enviar Ahora
+                      </>
+                    )}
+                  </button>
+                </form>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

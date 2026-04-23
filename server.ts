@@ -53,6 +53,17 @@ async function startServer() {
     }
   });
 
+  // Suggestions API Route
+  app.post("/api/send-suggestion", async (req, res) => {
+    try {
+      const { suggestion, email } = req.body;
+      console.log("Sugerencia recibida localmente:", { suggestion, email });
+      res.json({ message: "Sugerencia recibida localmente (revisa la consola)" });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({

@@ -60,6 +60,12 @@ const OBJECTIVE_TOOLS: Record<string, { id: string; label: string; icon: any; de
     { id: "Post de Intriga previa", label: "Post Teaser / Intriga", icon: Rocket, description: "Fomenta la curiosidad antes de dar la gran noticia." },
     { id: "Email informativo importante", label: "Email Informativo", icon: Mail, description: "Navega directo al buzón para avisar cambios relevantes." },
     { id: "Post Informativo visual", label: "Post Informativo Rápido", icon: MessageSquare, description: "Diseño ideal para placas informativas sencillas." },
+  ],
+  "Crear montajes de fotografías reales": [
+    { id: "Prompt de Montaje en Nuevo Fondo", label: "Montaje de Fondo", icon: Palette, description: "Traslada tu producto real a un entorno nuevo y fotorrealista." },
+    { id: "Prompt para Mejorar Calidad e Iluminación", label: "Refinar Calidad y Luz", icon: Sparkles, description: "Refina brillos, nitidez, sombras y luces de forma premium." },
+    { id: "Prompt de Dirección de Arte Editorial", label: "Composición Editorial", icon: ImageIcon, description: "Añade utilería y ambientación artística digna de revista." },
+    { id: "Prompt para Escenario Temático / Estacional", label: "Fondo Temático Estacional", icon: Rocket, description: "Fondo festivo o de temporada (ej: Navidad, Verano, Halloween)." },
   ]
 };
 
@@ -68,6 +74,7 @@ const OBJECTIVES = [
   { id: "Educar a la audiencia", label: "Educar a la audiencia", icon: Lightbulb, description: "Posiciónate como experto compartiendo valor." },
   { id: "Generar interacción/comunidad", label: "Generar interacción/comunidad", icon: Users, description: "Fomenta comentarios y engagement genuino." },
   { id: "Informar sobre una novedad", label: "Informar sobre una novedad", icon: MessageSquare, description: "Anuncia lanzamientos, cambios o noticias." },
+  { id: "Crear montajes de fotografías reales", label: "Crear montajes fotográficos reales", icon: ImageIcon, description: "Genera prompts para mover tu producto a nuevos fondos, mejorar la calidad y definir iluminación." },
 ];
 
 const TONES = [
@@ -130,6 +137,12 @@ export default function App() {
     newsDetail: "",
     newsDateLocation: "",
     newsEmotionLevel: "Alegre y festivo",
+
+    // Montajes fotográficos
+    photoOriginalDesc: "",
+    photoBackground: "",
+    photoStyle: "Fotografía comercial hiperrealista de estudio (Catálogo)",
+    photoLighting: "Luz natural suave de ventana con dirección sutil (Estudio casero)",
   });
 
   const [suggestionModal, setSuggestionModal] = useState(false);
@@ -508,6 +521,76 @@ export default function App() {
                   </div>
                 </motion.div>
               )}
+
+              {/* Dynamic inputs - Objective: CREAR MONTAJES FOTOGRÁFICOS */}
+              {formData.objective === "Crear montajes de fotografías reales" && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }} 
+                  animate={{ opacity: 1, y: 0 }}
+                  className="space-y-4 border-l-2 border-brand-500 pl-4 py-1"
+                >
+                  <p className="text-xs font-semibold text-brand-600 uppercase tracking-wider">Foco: Montajes y Dirección de Arte Visual</p>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Descripción de tu producto u objeto en la foto real
+                      <InfoTooltip text="Describe exactamente qué hay en tu foto original para que la IA entienda el elemento central. (Ej: 'Una taza de cerámica azul mate', 'Una zapatilla deportiva roja')." />
+                    </label>
+                    <input 
+                      type="text"
+                      className="input-field ring-1 ring-brand-100"
+                      placeholder="Ej: Una botella de perfume cilíndrica de vidrio transparente con tapa de madera."
+                      value={formData.photoOriginalDesc}
+                      onChange={(e) => handleInputChange("photoOriginalDesc", e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Nuevo fondo o escenario deseado
+                      <InfoTooltip text="¿Dónde quieres posicionar tu producto? Describe detalladamente el entorno, colores y elementos del fondo." />
+                    </label>
+                    <textarea 
+                      className="input-field ring-1 ring-brand-100 min-h-[60px]"
+                      placeholder="Ej: Sobre una piedra zen mojada en medio de un arroyo con agua cristalina bajo luz del sol matutina filtrada."
+                      value={formData.photoBackground}
+                      onChange={(e) => handleInputChange("photoBackground", e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Estilo estético / Dirección de arte
+                      <InfoTooltip text="Define el estilo artístico y la atmósfera de la imagen final del montaje." />
+                    </label>
+                    <select 
+                      className="input-field bg-white ring-1 ring-brand-100"
+                      value={formData.photoStyle}
+                      onChange={(e) => handleInputChange("photoStyle", e.target.value)}
+                    >
+                      <option value="Fotografía comercial hiperrealista de estudio (Catálogo)">Fotografía comercial de catálogo (Estudio nítido y limpio)</option>
+                      <option value="Cinematográfico de exteriores con profundidad de campo desenfocada (Bokeh suave)">Cinematográfico de exteriores (Fondo suavemente desenfocado)</option>
+                      <option value="Estilo orgánico y rústico (Cálido, hogareño, con plantas o madera)">Estilo rústico u orgánico (Cálido y artesanal)</option>
+                      <option value="Minimalista moderno ultrafino (Líneas limpias, sombras artísticas de plantas)">Minimalista moderno (Sombras proyectadas elegantes)</option>
+                      <option value="Estilo editorial de alta gama / Revista de lujo y lifestyle">Editorial premium (Revista de diseño y lifestyle)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Iluminación y Calidad de luz
+                      <InfoTooltip text="Controla cómo incide la luz sobre el producto y el nuevo escenario." />
+                    </label>
+                    <select 
+                      className="input-field bg-white ring-1 ring-brand-100"
+                      value={formData.photoLighting}
+                      onChange={(e) => handleInputChange("photoLighting", e.target.value)}
+                    >
+                      <option value="Luz natural suave de ventana con dirección sutil (Estudio casero)">Luz natural suave de ventana lateral</option>
+                      <option value="Iluminación dramática lateral con alto contraste (Sombras de atardecer / Golden Hour)">Luz de hora dorada / Sol de tarde (Sombras largas y cálidas)</option>
+                      <option value="Luz de estudio fotográfico profesional difusa por softbox (Perfecta e uniforme)">Luz de estudio difusa (Softbox sin reflejos marcados)</option>
+                      <option value="Luz artificial de neón vibrante con reflejos cyberpunk (Colores cibernéticos magenta y azul)">Reflejos de neón Cyberpunk (Magenta, cian y azul)</option>
+                      <option value="Retroiluminación solar pura que crea un halo de luz (Rim light) en los bordes">Retroiluminación cálida / Halo brillante (Rim light)</option>
+                    </select>
+                  </div>
+                </motion.div>
+              )}
             </div>
           </motion.div>
         );
@@ -593,6 +676,7 @@ export default function App() {
                   {formData.objective === "Educar a la audiencia" && "Para posts didácticos, define el nivel de conocimiento inicial de tu audiencia. Evita jergas si son principiantes absolutos para que la IA simplifique los conceptos correctamente."}
                   {formData.objective === "Generar interacción/comunidad" && "Un tono amigable, cercano u humorístico es ideal para que las personas rompan el hielo y dejen sus comentarios. ¡Evita tonos solemnes o excesivamente corporativos!"}
                   {formData.objective === "Informar sobre una novedad" && "Para anuncios importantes, la claridad es prioritaria. Especifica en las restricciones si hay detalles logísticos u horarios clave que NO quieres que la IA asuma o invente."}
+                  {formData.objective === "Crear montajes de fotografías reales" && "Para montajes fotográficos realistas, describe con el mayor detalle posible el material y textura del producto original (ej: vidrio pulido, cuero mate) y cómo incide la luz sobre este. Esto da un resultado mucho más cohesionado y reduce fallas de perspectiva en la IA de imagen."}
                 </div>
               </motion.div>
             </div>

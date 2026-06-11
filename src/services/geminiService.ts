@@ -7,57 +7,92 @@ export interface PromptFormData {
   brandTone: string[];
   restrictions: string;
   outputFormat: string;
-  // Specific fields
-  uniqueValue?: string; // Vender
-  keyConcept?: string; // Educar
-  engagementHook?: string; // Interactuar
-  newsDetail?: string; // Informar
-  productImage?: string; // Data URL for Visual Design
+  
+  // Specific fields - Objective: Vender
+  uniqueValue?: string;       // Oferta especial / Gancho
+  productBenefit?: string;    // Problema que soluciona / Beneficio estrella
+  objectionToDefeat?: string; // Objeción principal a derribar
+  callToAction?: string;      // Llamado a la acción (CTA)
+
+  // Specific fields - Objective: Educar
+  keyConcept?: string;        // Tip o concepto didáctico
+  learningLevel?: string;     // Nivel (Básico, Intermedio, Avanzado)
+  commonMyth?: string;        // Mito o error común a desmentir
+
+  // Specific fields - Objective: Generar interacción/comunidad
+  engagementHook?: string;    // Pregunta rompehielos o dilema
+  communityDynamic?: string;  // Tipo de interacción (Sorteo, Debate, Versus, Storytime)
+
+  // Specific fields - Objective: Informar sobre una novedad
+  newsDetail?: string;        // La noticia o novedad estrella
+  newsDateLocation?: string;  // Fechas, horas o locación
+  newsEmotionLevel?: string;  // Emoción (Festiva, Sorpresiva, Formal, Urgente)
 }
 
 const SYSTEM_PROMPT = `Rol: Eres un "Arquitecto de Prompts Experto", el motor principal de una aplicación web de marketing para emprendedores.
 
-Objetivo: Tu tarea es recibir los datos que un usuario ingresa en un formulario web y transformarlos automáticamente en un prompt maestro, altamente optimizado, listo para que el usuario lo copie y lo use en cualquier IA generativa (como Gemini, ChatGPT o Claude).
+Objetivo: Tu tarea es recibir los datos que un usuario ingresa en un formulario web altamente especializado y transformarlos automáticamente en un prompt de nivel maestro y sumamente optimizado, listo para que el usuario lo copie y lo use en cualquier IA generativa (como Gemini, ChatGPT o Claude).
 
-Reglas de Procesamiento:
-A partir de las variables ingresadas por el usuario, debes redactar el prompt final utilizando ESTRICTAMENTE la siguiente estructura. Utiliza los corchetes para separar cada sección:
+Instrucciones de Redacción de Prompt:
+A partir de las variables ingresadas por el usuario, debes estructurar el prompt de forma impecable usando la siguiente jerarquía encerrada en corchetes. Redacta el prompt en primera persona (ej: "Actúa como mi redactor...", "Escribe un copy...") de manera que sea un comando de entrada directa para la IA que el usuario copie:
 
 [CONTEXTO]
-Define el rol que debe asumir la IA que recibirá el prompt.
-Describe el negocio, el producto estrella y el público objetivo basándote en la información del usuario.
-Establece la propuesta de valor.
+- Define el rol profesional específico y experto que debe adoptar la IA basándose en el objetivo del negocio (ej. "Actúa como un experto en copywriting directo especializado en ventas de...", "Eres un profesor mentor experto en pedagogía digital...").
+- Describe el negocio del usuario, el tema en foco y el cliente ideal.
+- Agrega información clave específica proporcionada (como el beneficio del producto, el mito que desmentimos, la dinámica de la comunidad o la fecha del evento).
 
 [TAREA]
-Define con verbos de acción precisos qué es exactamente lo que se debe crear (ej. "Redacta un calendario", "Escribe 3 correos", "Diseña un brief visual").
-Especifica el objetivo principal de la tarea (vender, educar, generar interacción).
+- Describe de manera detallada la tarea específica que la IA tiene que crear (el canal de marketing seleccionado por el usuario, por ejemplo, "una grilla de contenidos", "un email irresistible", "un guion dinámico para un videoreel").
+- Integra las directrices del objetivo de manera prioritaria (ej. Enfocar en derribar la objeción indicada en ventas, estructurar didácticamente el concepto con el nivel educativo indicado, plantear el gancho/debate interactivo para fomentar comentarios, o estructurar la noticia destacando la urgencia/emoción correcta).
+- Detalla los pasos que debe seguir la IA para redactar un contenido sobresaliente (ej. Estructura AIDA si es venta, estructura gancho-aporte-cierre si es educación).
 
 [RESTRICCIONES]
-Define el tono de voz exacto de la marca (ej. cercano, profesional, orgánico).
-Especifica límites de longitud (cantidad de palabras, número de posts).
-Detalla elementos visuales a priorizar o evitar (ej. "priorizar estéticas limpias y minimalistas, evitar lenguaje saturado o emojis excesivos").
+- Especifica el tono de voz seleccionado por el usuario (ej. orgánico, profesional, amigable, etc.).
+- Detalla límites prácticos de longitud, restricciones de emojis y las exclusiones explícitas ingresadas por el usuario.
 
 [FORMATO]
-Indica cómo debe entregarse la información de salida (ej. "Entregar en una tabla con columnas para Día, Texto, Sugerencia de Imagen", o "Entregar en viñetas").
+- Detalla exactamente cómo estructurar la salida para que sea de lectura cómoda y profesional (tablas con columnas específicas, listas claras, formato guion teatral para videos con directrices visuales, etc.).
 
 Formato de Salida:
-Tu única respuesta debe ser el prompt final generado, escrito en primera persona (como si el usuario le estuviera dando la orden directa a la IA). No incluyas saludos, ni confirmaciones, ni texto previo o posterior. Solo entrega el prompt listo para usar.`;
+Tu única respuesta en pantalla debe ser este prompt maestro generado. No agregues introducciones, confirmaciones, notas al inicio, ni explicaciones al final. Debe comenzar en [CONTEXTO] y terminar en el formato recomendado, completamente pulido para que el usuario solo tenga que pulsar un botón para copiarlo e ir a ejecutarlo.`;
 
 export async function generateOptimizedPrompt(data: PromptFormData): Promise<string> {
-  const objectiveSpecificInfo = 
-    data.objective === "Vender un producto" ? `Valor único/Oferta: ${data.uniqueValue}` :
-    data.objective === "Educar a la audiencia" ? `Concepto clave o tip: ${data.keyConcept}` :
-    data.objective === "Generar interacción/comunidad" ? `Gancho o pregunta: ${data.engagementHook}` :
-    data.objective === "Informar sobre una novedad" ? `Detalle de la novedad: ${data.newsDetail}` : "";
+  let objectiveSpecificInfo = "";
+
+  if (data.objective === "Vender un producto") {
+    objectiveSpecificInfo = `
+- Oferta / Promoción irresistible: ${data.uniqueValue || "No especificada"}
+- Beneficio principal / Problema que resuelve: ${data.productBenefit || "No especificado"}
+- Objeción principal a derribar: ${data.objectionToDefeat || "No especificada"}
+- Llamado a la Acción (CTA) deseado: ${data.callToAction || "No especificado"}
+    `;
+  } else if (data.objective === "Educar a la audiencia") {
+    objectiveSpecificInfo = `
+- Concepto clave / Aprendizaje de valor: ${data.keyConcept || "No especificado"}
+- Nivel de profundidad educativa: ${data.learningLevel || "No especificado"}
+- Mito o Error común a desmentir: ${data.commonMyth || "No especificado"}
+    `;
+  } else if (data.objective === "Generar interacción/comunidad") {
+    objectiveSpecificInfo = `
+- Pregunta gancho / Dilema rompehielos: ${data.engagementHook || "No especificado"}
+- Tipo de dinámica / Formato de interacción: ${data.communityDynamic || "No especificada"}
+    `;
+  } else if (data.objective === "Informar sobre una novedad") {
+    objectiveSpecificInfo = `
+- Gran noticia o novedad: ${data.newsDetail || "No especificada"}
+- Fechas, horarios, ubicaciones y datos de contacto key: ${data.newsDateLocation || "No especificados"}
+- Nivel de emoción / Tonalidad del anuncio: ${data.newsEmotionLevel || "No especificado"}
+    `;
+  }
 
   const userInput = `
-Tarea seleccionada: ${data.marketingTool}
-Objetivo: ${data.objective}
-Mi negocio: ${data.businessDescription}
-Tema específico de este prompt: ${data.specificTopic}
+Herramienta de marketing / Formato elegido: ${data.marketingTool}
+Objetivo de la campaña: ${data.objective}
+Descripción del negocio: ${data.businessDescription}
+Tema específico de la pieza: ${data.specificTopic}
 ${objectiveSpecificInfo}
-${data.productImage ? "[ESTE PROMPT INCLUYE UNA IMAGEN DE REFERENCIA: El usuario ha subido una foto del producto. Asegúrate de que el diseño final integre armoniosamente este producto en la composición visual.]" : ""}
- Mi público: ${data.targetAudience}
-Tono de marca: ${data.brandTone.join(", ")}
+Público objetivo de la marca: ${data.targetAudience}
+Tonalidad de marca: ${data.brandTone.join(", ")}
 Restricciones adicionales: ${data.restrictions}
 Formato deseado: ${data.outputFormat}
   `;

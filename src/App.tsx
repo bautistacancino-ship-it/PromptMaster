@@ -18,7 +18,6 @@ import {
   Rocket,
   Instagram,
   Palette,
-  ImagePlus,
   Info,
   MessageSquarePlus,
   Send,
@@ -37,14 +36,32 @@ declare global {
   }
 }
 
-const MARKETING_TOOLS = [
-  { id: "Diseño de Contenido Visual", label: "Diseño de Contenido Visual", icon: Palette, description: "Integra tu foto en un nuevo diseño gráfico" },
-  { id: "Grilla de contenido semanal", label: "Grilla de Contenido Semanal", icon: Instagram, description: "Planificación para Instagram/TikTok" },
-  { id: "Brief de fotografía de producto", label: "Brief de Fotografía de Producto", icon: ImageIcon, description: "Directrices visuales detalladas" },
-  { id: "Copywriting para redes sociales", label: "Copywriting para Redes Sociales", icon: MessageSquare, description: "Captions persuasivas" },
-  { id: "Estrategia de lanzamiento", label: "Estrategia de Lanzamiento", icon: Rocket, description: "Plan de marketing para nuevos productos" },
-  { id: "Email marketing (Newsletter)", label: "Email Marketing (Newsletter)", icon: Mail, description: "Fidelización o carritos abandonados" },
-];
+const OBJECTIVE_TOOLS: Record<string, { id: string; label: string; icon: any; description: string }[]> = {
+  "Vender un producto": [
+    { id: "Copywriting de Venta (Fórmula AIDA)", label: "Copywriting de Venta (AIDA)", icon: MessageSquare, description: "Captions y copys persuasivos con gatillos mentales." },
+    { id: "Guion de Ventas para Reels/TikTok", label: "Guion de Redes (Conversión)", icon: Instagram, description: "Estructura gancho + problema + solución." },
+    { id: "Email marketing Promocional", label: "Email Promocional", icon: Mail, description: "Vende directamente a tu lista con asuntos irresistibles." },
+    { id: "Estrategia de Lanzamiento", label: "Estrategia de Lanzamiento", icon: Rocket, description: "Pasos y copys desde el teaser hasta el cierre." },
+  ],
+  "Educar a la audiencia": [
+    { id: "Contenido para Carrusel/Infografía", label: "Estructura de Carrusel", icon: Palette, description: "Desglose diapositiva por diapositiva (Paso a paso)." },
+    { id: "Post Didáctico con Storytelling", label: "Post Didáctico Largo", icon: MessageSquare, description: "Enseña contando una historia memorable." },
+    { id: "Guion Educativo de 60 segundos", label: "Guion Formato Corto", icon: Instagram, description: "Capta la atención con tips prácticos al grano." },
+    { id: "Email Newsletter Semanal de Valor", label: "Newsletter de Valor", icon: Mail, description: "Comparte conocimientos para fidelizar tu base de datos." },
+  ],
+  "Generar interacción/comunidad": [
+    { id: "Dinámica versus (A vs B o Debate)", label: "Interactivos A vs B / Debate", icon: MessageSquare, description: "Dividir opciones para hacerlos comentar activamente." },
+    { id: "Storytime interactivo de Marca", label: "Guion Storytime Humano", icon: Instagram, description: "Comparte una anécdota y deja un debate abierto." },
+    { id: "Estrategia y Copy para Sorteos", label: "Estrategia de Sorteo", icon: Rocket, description: "Reglas claras y copys entusiastas para participación masiva." },
+    { id: "Q&A / Ronda de Preguntas", label: "Preguntas del Público", icon: Users, description: "Fomenta preguntas directas o responde dudas frecuentes." },
+  ],
+  "Informar sobre una novedad": [
+    { id: "Anuncio de Novedad oficial", label: "Comunicado Oficial", icon: Info, description: "Limpio, con todos los detalles ordenados de forma profesional." },
+    { id: "Post de Intriga previa", label: "Post Teaser / Intriga", icon: Rocket, description: "Fomenta la curiosidad antes de dar la gran noticia." },
+    { id: "Email informativo importante", label: "Email Informativo", icon: Mail, description: "Navega directo al buzón para avisar cambios relevantes." },
+    { id: "Post Informativo visual", label: "Post Informativo Rápido", icon: MessageSquare, description: "Diseño ideal para placas informativas sencillas." },
+  ]
+};
 
 const OBJECTIVES = [
   { id: "Vender un producto", label: "Vender un producto", icon: Rocket, description: "Convierte leads en clientes con mensajes persuasivos." },
@@ -87,17 +104,32 @@ export default function App() {
   const [formData, setFormData] = useState<PromptFormData>({
     businessDescription: "",
     targetAudience: "",
-    marketingTool: MARKETING_TOOLS[0].id,
+    marketingTool: OBJECTIVE_TOOLS[OBJECTIVES[0].id][0].id,
     objective: OBJECTIVES[0].id,
     specificTopic: "",
     brandTone: [],
     restrictions: "",
     outputFormat: FORMATS[0],
+    
+    // Vender
     uniqueValue: "",
+    productBenefit: "",
+    objectionToDefeat: "",
+    callToAction: "",
+
+    // Educar
     keyConcept: "",
+    learningLevel: "Básico (Principiantes)",
+    commonMyth: "",
+
+    // Generar interacción
     engagementHook: "",
+    communityDynamic: "Debate abierto",
+
+    // Informar novedad
     newsDetail: "",
-    productImage: "",
+    newsDateLocation: "",
+    newsEmotionLevel: "Alegre y festivo",
   });
 
   const [suggestionModal, setSuggestionModal] = useState(false);
@@ -107,6 +139,15 @@ export default function App() {
 
   const handleInputChange = (field: keyof PromptFormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleObjectiveSelect = (objectiveId: string) => {
+    const defaultTool = OBJECTIVE_TOOLS[objectiveId]?.[0]?.id || "";
+    setFormData(prev => ({
+      ...prev,
+      objective: objectiveId,
+      marketingTool: defaultTool
+    }));
   };
 
   const handleToneToggle = (tone: string) => {
@@ -196,7 +237,7 @@ export default function App() {
               {OBJECTIVES.map((obj) => (
                 <button
                   key={obj.id}
-                  onClick={() => handleInputChange("objective", obj.id)}
+                  onClick={() => handleObjectiveSelect(obj.id)}
                   className={`flex items-start gap-4 p-4 rounded-xl border transition-all text-left ${
                     formData.objective === obj.id 
                     ? "bg-brand-50 border-brand-500 ring-1 ring-brand-500" 
@@ -241,7 +282,7 @@ export default function App() {
                   <InfoTooltip text="Explica brevemente qué vendes y cuál es tu esencia." />
                 </label>
                 <textarea 
-                  className="input-field min-h-[80px]"
+                  className="input-field min-h-[70px]"
                   placeholder="Ej: Cafetería de especialidad con granos de origen único."
                   value={formData.businessDescription}
                   onChange={(e) => handleInputChange("businessDescription", e.target.value)}
@@ -250,78 +291,221 @@ export default function App() {
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Tema específico para este prompt
+                  Tema secundario o pieza específica de hoy
                   <InfoTooltip text="¿De qué producto o noticia hablaremos en este post puntual?" />
                 </label>
                 <input 
                   type="text"
                   className="input-field"
-                  placeholder="Ej: Promo de lunes de café en grano."
+                  placeholder="Ej: Lanzamiento de la nueva variedad de café de Colombia."
                   value={formData.specificTopic}
                   onChange={(e) => handleInputChange("specificTopic", e.target.value)}
                 />
               </div>
 
-              {/* Adaptive Fields Based on Objective */}
+              {/* Dynamic inputs - Objective: VENDER */}
               {formData.objective === "Vender un producto" && (
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Valor único u Oferta especial
-                    <InfoTooltip text="¿Por qué deberían comprarte a ti ahora mismo? (Descuento, calidad, etc)." />
-                  </label>
-                  <input 
-                    type="text"
-                    className="input-field ring-2 ring-brand-100"
-                    placeholder="Ej: 20% de descuento o primer café gratis."
-                    value={formData.uniqueValue}
-                    onChange={(e) => handleInputChange("uniqueValue", e.target.value)}
-                  />
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }} 
+                  animate={{ opacity: 1, y: 0 }}
+                  className="space-y-4 border-l-2 border-brand-500 pl-4 py-1"
+                >
+                  <p className="text-xs font-semibold text-brand-600 uppercase tracking-wider">Foco: Conversión y Ventas</p>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Oferta especial o Gancho irresistible
+                      <InfoTooltip text="¿Qué descuento, regalo, kit o beneficio exclusivo ofreces en esta campaña?" />
+                    </label>
+                    <input 
+                      type="text"
+                      className="input-field ring-1 ring-brand-100"
+                      placeholder="Ej: Envíos gratis este fin de semana o 2x1 en la primera compra."
+                      value={formData.uniqueValue}
+                      onChange={(e) => handleInputChange("uniqueValue", e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Beneficio estrella / Solución
+                      <InfoTooltip text="¿Qué problema clave resuelve tu producto o qué beneficio lo hace único?" />
+                    </label>
+                    <input 
+                      type="text"
+                      className="input-field ring-1 ring-brand-100"
+                      placeholder="Ej: Café recolectado a mano que no genera acidez estomacal."
+                      value={formData.productBenefit}
+                      onChange={(e) => handleInputChange("productBenefit", e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Objeción principal a derribar
+                      <InfoTooltip text="¿Cuál es la excusa típica para no comprarte? El prompt entrenará a la IA para debatirla sutilmente." />
+                    </label>
+                    <input 
+                      type="text"
+                      className="input-field ring-1 ring-brand-100"
+                      placeholder="Ej: 'El café de especialidad es muy caro' o 'No sé preparar café filtrado'."
+                      value={formData.objectionToDefeat}
+                      onChange={(e) => handleInputChange("objectionToDefeat", e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Llamado a la Acción (CTA) deseado
+                      <InfoTooltip text="¿Qué acción exacta debe realizar la persona al leer?" />
+                    </label>
+                    <input 
+                      type="text"
+                      className="input-field ring-1 ring-brand-100"
+                      placeholder="Ej: Escribe la palabra 'CAFE' en los comentarios o haz clic en el link de la bio."
+                      value={formData.callToAction}
+                      onChange={(e) => handleInputChange("callToAction", e.target.value)}
+                    />
+                  </div>
                 </motion.div>
               )}
 
+              {/* Dynamic inputs - Objective: EDUCAR */}
               {formData.objective === "Educar a la audiencia" && (
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Concepto clave o Tip a enseñar
-                    <InfoTooltip text="¿Qué aprendizaje útil le vas a regalar a tu seguidor?" />
-                  </label>
-                  <textarea 
-                    className="input-field ring-2 ring-brand-100 min-h-[60px]"
-                    placeholder="Ej: Cómo diferenciar un grano arábica de un robusta."
-                    value={formData.keyConcept}
-                    onChange={(e) => handleInputChange("keyConcept", e.target.value)}
-                  />
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }} 
+                  animate={{ opacity: 1, y: 0 }}
+                  className="space-y-4 border-l-2 border-brand-500 pl-4 py-1"
+                >
+                  <p className="text-xs font-semibold text-brand-600 uppercase tracking-wider">Foco: Autoridad y Valor didáctico</p>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Concepto o Tip súper útil a enseñar
+                      <InfoTooltip text="¿Qué técnica, secreto, tip paso a paso o conocimiento práctico vas a regalar hoy?" />
+                    </label>
+                    <textarea 
+                      className="input-field ring-1 ring-brand-100 min-h-[60px]"
+                      placeholder="Ej: La regla de oro de la proporción agua-café (1 gramo de café por cada 16 gramos de agua)."
+                      value={formData.keyConcept}
+                      onChange={(e) => handleInputChange("keyConcept", e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Nivel de complejidad pedagógica
+                      <InfoTooltip text="Ajusta el nivel técnico de las analogías y explicaciones en el prompt final." />
+                    </label>
+                    <select 
+                      className="input-field bg-white ring-1 ring-brand-100"
+                      value={formData.learningLevel}
+                      onChange={(e) => handleInputChange("learningLevel", e.target.value)}
+                    >
+                      <option value="Básico (Principiantes absolute sin jerga técnica)">Básico (Ideal para principiantes, sin jerga técnica)</option>
+                      <option value="Intermedio (Con analogías y conceptos comunes)">Intermedio (Con analogías y conceptos comunes)</option>
+                      <option value="Avanzado (Para entusiastas o profesionales)">Avanzado (Técnico, preciso y profesional)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Mito o Error común a desmentir
+                      <InfoTooltip text="Desmentir un error de la industria genera muchísimo enganche y retención." />
+                    </label>
+                    <input 
+                      type="text"
+                      className="input-field ring-1 ring-brand-100"
+                      placeholder="Ej: Creer que guardar el café en el refrigerador lo mantiene más fresco."
+                      value={formData.commonMyth}
+                      onChange={(e) => handleInputChange("commonMyth", e.target.value)}
+                    />
+                  </div>
                 </motion.div>
               )}
 
+              {/* Dynamic inputs - Objective: INTERACCIÓN */}
               {formData.objective === "Generar interacción/comunidad" && (
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Gancho o Pregunta para la comunidad
-                    <InfoTooltip text="Una pregunta que obligue a tus seguidores a comentar." />
-                  </label>
-                  <input 
-                    type="text"
-                    className="input-field ring-2 ring-brand-100"
-                    placeholder="Ej: ¿Eres más de espresso o de latte suave?"
-                    value={formData.engagementHook}
-                    onChange={(e) => handleInputChange("engagementHook", e.target.value)}
-                  />
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }} 
+                  animate={{ opacity: 1, y: 0 }}
+                  className="space-y-4 border-l-2 border-brand-500 pl-4 py-1"
+                >
+                  <p className="text-xs font-semibold text-brand-600 uppercase tracking-wider">Foco: Engagement y Respuestas</p>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Pregunta ruidosa o Dilema rompehielos
+                      <InfoTooltip text="Una pregunta de debate o elección rápida que divida constructivamente la opinión." />
+                    </label>
+                    <input 
+                      type="text"
+                      className="input-field ring-1 ring-brand-100"
+                      placeholder="Ej: ¿Eres del team café caliente sin importar el verano o amas el Iced Coffee apenas sube la temperatura?"
+                      value={formData.engagementHook}
+                      onChange={(e) => handleInputChange("engagementHook", e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Formato o Dinámica de interacción
+                      <InfoTooltip text="¿Mediante qué dinámica quieres fomentar la participación?" />
+                    </label>
+                    <select 
+                      className="input-field bg-white ring-1 ring-brand-100"
+                      value={formData.communityDynamic}
+                      onChange={(e) => handleInputChange("communityDynamic", e.target.value)}
+                    >
+                      <option value="Debate abierto (Pregunta y respuesta directa libre)">Debate abierto (Fomentar debate en comentarios)</option>
+                      <option value="Dilema Versus o Test de Elección (Elegir A o B)">Dilema Versus (Elegir opción A o opción B)</option>
+                      <option value="Sorteo interactivo con base de comentarios">Sorteo interactivo (Reglas claras de participación)</option>
+                      <option value="Storytime de anécdotas de la marca preguntando al final">Storytime (Conectar humanamente y preguntar sus historias)</option>
+                    </select>
+                  </div>
                 </motion.div>
               )}
 
+              {/* Dynamic inputs - Objective: INFORMAR NOVEDAD */}
               {formData.objective === "Informar sobre una novedad" && (
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    ¿Cuál es la gran novedad o noticia?
-                    <InfoTooltip text="Lanzamientos, horarios nuevos, eventos, mudanzas..." />
-                  </label>
-                  <textarea 
-                    className="input-field ring-2 ring-brand-100 min-h-[60px]"
-                    placeholder="Ej: Abrimos nueva sucursal en el centro el próximo viernes."
-                    value={formData.newsDetail}
-                    onChange={(e) => handleInputChange("newsDetail", e.target.value)}
-                  />
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }} 
+                  animate={{ opacity: 1, y: 0 }}
+                  className="space-y-4 border-l-2 border-brand-500 pl-4 py-1"
+                >
+                  <p className="text-xs font-semibold text-brand-600 uppercase tracking-wider">Foco: Anuncios y Claridad</p>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      ¿Cuál es la gran novedad o noticia estrella?
+                      <InfoTooltip text="Explica de qué se trata el cambio (Apertura de local, nuevo stock, horario festivo, etc.)" />
+                    </label>
+                    <textarea 
+                      className="input-field ring-1 ring-brand-100 min-h-[60px]"
+                      placeholder="Ej: Abrimos nuestra segunda cafetería, con un sector Coworking y terraza Pet Friendly."
+                      value={formData.newsDetail}
+                      onChange={(e) => handleInputChange("newsDetail", e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Fechas, horarios, ubicación o contacto relevante
+                      <InfoTooltip text="Datos de logística fundamentales para el post. Aparecerán ordenados y claros." />
+                    </label>
+                    <input 
+                      type="text"
+                      className="input-field ring-1 ring-brand-100"
+                      placeholder="Ej: Próximo Sábado 15 de Noviembre - 10:00 AM en Calle Italia 520."
+                      value={formData.newsDateLocation}
+                      onChange={(e) => handleInputChange("newsDateLocation", e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Emoción primordial del anuncio
+                      <InfoTooltip text="Modula el nivel de entusiasmo y el tipo de energía que transmite el texto." />
+                    </label>
+                    <select 
+                      className="input-field bg-white ring-1 ring-brand-100"
+                      value={formData.newsEmotionLevel}
+                      onChange={(e) => handleInputChange("newsEmotionLevel", e.target.value)}
+                    >
+                      <option value="Alegre, festivo y celebratorio (Expresa orgullo y felicidad)">Alegre, festivo y celebratorio</option>
+                      <option value="Intrigante, misterioso e incremental (Ideal para expectativa)">De expectativa / Intriga misteriosa</option>
+                      <option value="Corporativo, formal, claro y profesional">Corporativo, formal y claro</option>
+                      <option value="Urgencia amigable (Límite de tiempo, aviso clave)">Urgencia amigable (Aviso de última hora)</option>
+                    </select>
+                  </div>
                 </motion.div>
               )}
             </div>
@@ -395,6 +579,22 @@ export default function App() {
                   onChange={(e) => handleInputChange("restrictions", e.target.value)}
                 />
               </div>
+
+              {/* Contextual Recommendation Box */}
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="p-4 bg-brand-50 border border-brand-100 rounded-2xl flex gap-3 text-slate-600 text-xs md:text-sm"
+              >
+                <Lightbulb size={20} className="text-brand-500 shrink-0 mt-0.5" />
+                <div>
+                  <span className="font-semibold text-brand-800">Recomendación para {formData.objective}:</span>{" "}
+                  {formData.objective === "Vender un producto" && "El público comprador ama saber qué problema exacto le solucionas. Describe a un cliente ideal que sufra ese dolor para que el prompt lo aborde con empatía y ofertas atractivas."}
+                  {formData.objective === "Educar a la audiencia" && "Para posts didácticos, define el nivel de conocimiento inicial de tu audiencia. Evita jergas si son principiantes absolutos para que la IA simplifique los conceptos correctamente."}
+                  {formData.objective === "Generar interacción/comunidad" && "Un tono amigable, cercano u humorístico es ideal para que las personas rompan el hielo y dejen sus comentarios. ¡Evita tonos solemnes o excesivamente corporativos!"}
+                  {formData.objective === "Informar sobre una novedad" && "Para anuncios importantes, la claridad es prioritaria. Especifica en las restricciones si hay detalles logísticos u horarios clave que NO quieres que la IA asuma o invente."}
+                </div>
+              </motion.div>
             </div>
           </motion.div>
         );
@@ -421,90 +621,34 @@ export default function App() {
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-3">
                   ¿Qué necesitas generar hoy?
-                  <InfoTooltip text="El canal o formato de salida que buscas." />
+                  <InfoTooltip text={`Formatos y piezas recomendadas específicamente para el objetivo: "${formData.objective}"`} />
                 </label>
-                <div className="grid grid-cols-1 gap-2">
-                  {MARKETING_TOOLS.map((tool) => (
-                    <button
-                      key={tool.id}
-                      onClick={() => handleInputChange("marketingTool", tool.id)}
-                      className={`flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${
-                        formData.marketingTool === tool.id 
-                        ? "bg-brand-50 border-brand-500 ring-1 ring-brand-500" 
-                        : "bg-white border-slate-200 hover:border-brand-300"
-                      }`}
-                    >
-                      <div className={`p-1.5 rounded-lg ${formData.marketingTool === tool.id ? "bg-brand-500 text-white" : "bg-slate-100 text-slate-500"}`}>
-                        <tool.icon size={16} />
-                      </div>
-                      <div className="text-sm font-semibold text-slate-900">{tool.label}</div>
-                    </button>
-                  ))}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {(OBJECTIVE_TOOLS[formData.objective] || []).map((tool) => {
+                    const isSelected = formData.marketingTool === tool.id;
+                    return (
+                      <button
+                        key={tool.id}
+                        type="button"
+                        onClick={() => handleInputChange("marketingTool", tool.id)}
+                        className={`flex items-start gap-3 p-4 rounded-xl border transition-all text-left ${
+                          isSelected 
+                          ? "bg-brand-50 border-brand-500 ring-1 ring-brand-500" 
+                          : "bg-white border-slate-200 hover:border-brand-300"
+                        }`}
+                      >
+                        <div className={`p-2 rounded-lg shrink-0 ${isSelected ? "bg-brand-500 text-white" : "bg-slate-100 text-slate-500"}`}>
+                          <tool.icon size={18} />
+                        </div>
+                        <div>
+                          <div className="text-sm font-semibold text-slate-900">{tool.label}</div>
+                          <div className="text-[11px] text-slate-500 mt-0.5 leading-tight">{tool.description}</div>
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
-
-              {/* Visual Content Uploader */}
-              {formData.marketingTool === "Diseño de Contenido Visual" && (
-                <motion.div 
-                  initial={{ opacity: 0, height: 0 }} 
-                  animate={{ opacity: 1, height: "auto" }}
-                  className="space-y-3"
-                >
-                  <label className="block text-sm font-medium text-slate-700">
-                    Subir foto de producto para el diseño
-                    <InfoTooltip text="Sube una foto clara para integrarla en el diseño." />
-                  </label>
-                  <div className="relative group">
-                    <input 
-                      type="file" 
-                      accept="image/*"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          const reader = new FileReader();
-                          reader.onloadend = () => {
-                            handleInputChange("productImage", reader.result as string);
-                          };
-                          reader.readAsDataURL(file);
-                        }
-                      }}
-                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                    />
-                    <div className={`border-2 border-dashed rounded-2xl p-6 text-center transition-all ${
-                      formData.productImage ? "border-brand-500 bg-brand-50" : "border-slate-200 group-hover:border-brand-300"
-                    }`}>
-                      {formData.productImage ? (
-                        <div className="space-y-2 flex flex-col items-center">
-                          <img src={formData.productImage} alt="Preview" className="w-24 h-24 object-cover rounded-lg shadow-sm" />
-                          <div className="text-xs text-brand-600 font-medium">Foto cargada correctamente</div>
-                          <button 
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleInputChange("productImage", "");
-                            }}
-                            className="text-xs text-slate-400 hover:text-red-500"
-                          >
-                            Eliminar foto
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="space-y-2 py-2">
-                          <div className="mx-auto w-10 h-10 bg-brand-100 text-brand-600 rounded-full flex items-center justify-center">
-                            <ImagePlus size={20} />
-                          </div>
-                          <div className="text-sm text-slate-600">
-                            Haga clic o arrastre para subir su foto
-                          </div>
-                          <div className="text-[10px] text-slate-400">
-                            Formatos: JPG, PNG • Max: 5MB
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </motion.div>
-              )}
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
